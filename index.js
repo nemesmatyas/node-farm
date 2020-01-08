@@ -2,6 +2,8 @@ const fs = require('fs');
 const http = require('http');
 const url = require('url');
 
+const slugify = require('slugify');
+
 const replaceTemplate = (template, product) => {
     let output = template.replace(/{%PRODUCTNAME%}/g, product.productName);
     output = output.replace(/{%IMAGE%}/g, product.image);
@@ -23,6 +25,9 @@ const tempCard = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'u
 const tempProduct = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8');
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
 const productData = JSON.parse(data);
+
+const slug = productData.map(el => slugify(el.productName, { lower: true }));
+console.log(slug);
 
 const server = http.createServer((request, response) => {
     
