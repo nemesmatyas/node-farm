@@ -2,22 +2,6 @@ const fs = require('fs');
 const http = require('http');
 const url = require('url');
 
-// BLOCKING, SYNCHRONOUS CODE
-/* const textInput = fs.readFileSync('./txt/input.txt', 'utf-8');
-console.log(textInput);
-const textOutput = `This what we know about the avocado: ${textInput} File created on: ${Date.now()}`;
-fs.writeFileSync('./txt/output.txt', textOutput); */
-/* 
-fs.readFile('./txt/start.txt', 'utf-8', (err, data1) => {
-    fs.readFile(`./txt/${data1}.txt`, 'utf-8', (err, data2) => {
-        console.log(data2);
-
-        fs.writeFile('./txt/async_output.txt', `${data1}\n${data2}`, 'utf-8', err => {
-            console.log('Your file has been written');
-        })
-    });
-});
-console.log('Will read file!'); */
 const replaceTemplate = (template, product) => {
     let output = template.replace(/{%PRODUCTNAME%}/g, product.productName);
     output = output.replace(/{%IMAGE%}/g, product.image);
@@ -41,12 +25,11 @@ const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
 const productData = JSON.parse(data);
 
 const server = http.createServer((request, response) => {
-    console.log(request.url);
-
-    const pathName = request.url;
+    
+    const { query, pathname } = url.parse(request.url, true);
 
     // OVERVIEW PAGE
-    if (pathName === '/' || pathName === '/overview') {
+    if (pathname === '/' || pathname === '/overview') {
         response.writeHead(200, {
             'Content-type': 'text/html'
         })
@@ -55,14 +38,17 @@ const server = http.createServer((request, response) => {
         response.end(output);
     }
     // PRODUCT PAGE
-    else if (pathName === '/product') {
+    else if (pathname === '/product') {
         response.writeHead(200, {
             'Content-type': 'text/html'
         })
-        response.end(tempProduct);
+        const product = productData[query.id];
+        const output = replaceTemplate(tempProduct, product);
+        
+        response.end(output);
     }
     // API
-    else if (pathName === '/api') {
+    else if (pathname === '/api') {
         response.writeHead(200, {
             'Content-type': 'application/json'
         });
@@ -73,7 +59,7 @@ const server = http.createServer((request, response) => {
         response.writeHead(404, {
             'Content-type': 'text/html'
         });
-        response.end('<h1>Hello from the server!</h1>'); // answer back to the client
+        response.end('<h1>Page not found!</h1>'); // answer back to the client
     }
     
 });
